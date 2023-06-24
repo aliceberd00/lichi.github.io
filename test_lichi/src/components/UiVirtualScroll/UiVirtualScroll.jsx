@@ -43,7 +43,7 @@ const UiVirtualScroll = ({
             setIsLoading(true)
 
             onPrevCallback(upperBoundary - limit).then(() => {
-                // update boundaries to move indices - limit
+                // обновляем границы для перемещения индексов - лимит
                 setUpperBoundary(upperBoundary - limit)
                 setLowerBoundary(lowerBoundary - limit)
 
@@ -77,7 +77,7 @@ const UiVirtualScroll = ({
     return (
         <div
             ref={overlayRef}
-            style={{ height, overflow: 'scroll' }}
+           // style={{ height, overflow: 'scroll' }}
             onScroll={(e) => handleScroll(e.target)}
         >
             {children}

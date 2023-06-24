@@ -5,6 +5,10 @@ import styles from '@/styles/Home.module.css'
 import {Card} from "@/components/card/Card";
 import {useEffect, useState} from "react";
 import UiVirtualScroll from "@/components/UiVirtualScroll/UiVirtualScroll";
+import {useDispatch, useSelector} from "react-redux";
+import {fetchItems} from "@/asyncActions/getItems";
+import axios from "axios";
+
 
 const inter = Inter({ subsets: ['latin'] })
 const callApi = (offset, limit) => {
@@ -21,22 +25,33 @@ const callApi = (offset, limit) => {
 }
 
 
-export default function Home() {
-    const limit = 100
+export default function Home({items_array_statc}) {
+    const dispatch = useDispatch()
+    const limit = 12
     // количество элементов, которые мы хотим сохранить в памяти - 300
     const buffer = limit * 3
     // количество элементов, которые мы хотим кэшировать при загрузке нового фрагмента данных
     const cache = buffer - limit
     const [items, setItems] = useState([])
     const [isLoading, setIsLoading] = useState(false)
+    const items_array = useSelector(state => state.items_reducer.items_array)
+    console.log('test')
+    console.log(items_array)
 
     useEffect(() => {
         setIsLoading(true)
-        callApi(0, buffer).then((res) => {
-            setItems(res)
-            setIsLoading(false)
-        })
+        // callApi(0, buffer).then((res) => {
+        //     setItems(res)
+        //     setIsLoading(false)
+        // })
+        dispatch({type: "INSERT_ITEMS", payload: items_array_statc})
+        setIsLoading(false)
     }, [])
+
+    // useEffect(() => {
+    //     setItems(items_array)
+    // },[dispatch]);
+
 
     const prevCallback = (newOffset) => {
         setIsLoading(true)
@@ -60,6 +75,23 @@ export default function Home() {
         })
     }
 
+    let cards_strng = ''
+    // if(items_array){
+    //     cards_strng = items_array.map((item, index) => (
+    //         <div>
+    //             <Card name={item.name}
+    //                   article={item.article}
+    //                   price={item.price}
+    //                   description={item.description}
+    //                   img_link={item.img_link}
+    //                   key={item.id}
+    //             />
+    //             {isLoading ? <>Loading...</> : item}
+    //         </div>
+    //     ))
+    // }
+
+
   return (
     <>
       <Head>
@@ -70,6 +102,8 @@ export default function Home() {
       </Head>
       <main className={`${styles.main} ${inter.className}`}>
         <div /*className={styles.description}*/>
+            <button onClick={() => dispatch(fetchItems(30,1,'INSERT_ITEMS'))}>
+                press me</button>
 
             <UiVirtualScroll
                 buffer={buffer}
@@ -79,19 +113,21 @@ export default function Home() {
                 onPrevCallback={prevCallback}
                 onNextCallback={nextCallback}
             >
-                <>
-                    {items.map((item, index) => (
-                        <div style={{ padding: '10px' }}>
-                            <Card name={item + "Костюмные брюки с защипами"}
-                                  articul = "trs0359"
-                                  price = "4999руб"
-                                  descripton = "descripton"
-                                  img_link = "https://static.lichi.com/product/45562/d01dfa53a3149555f2561c3a30ead28c.jpg?v=0_45562.0"
+                <div className={styles.cards}>
+                    {items_array.map(item =>
+                        <div>
+                            <Card name={item.name}
+                                  article={item.article}
+                                  price={item.price}
+                                  description={item.description}
+                                  img_link={item.img_link}
+                                  key={item.id}
                             />
-                            {isLoading ? <>Loading...</> : item}
+                            {isLoading ? <>Loading...</> : item.id}
                         </div>
-                    ))}
-                </>
+                    )}
+                    {cards_strng}
+                </div>
             </UiVirtualScroll>
 
         </div>
@@ -99,3 +135,38 @@ export default function Home() {
     </>
   )
 }
+
+
+export const getStaticProps = async () => {
+    const response = await axios.get('https://api.lichi.com/category/get_category_product_list?' + new URLSearchParams({
+        category: 'clothes',
+        lang: 1,
+        shop: 2,
+        limit: 36,
+        page: 1
+    }))
+    // console.log(response.data)
+    const data = response.data
+    const data_array = data.api_data.aProduct
+    let result_array = []
+    for (let i=0; i<data_array.length; i++){
+        const one_element = {
+            id: i ,
+            visibility: false,
+            name: data_array[i].name,
+            article: data_array[i].article,
+            price: data_array[i].original_price + data_array[i].currency.postfix,
+            description: data_array[i].descriptions.html,
+            img_link: data_array[i].photos[0].big
+        }
+        result_array.push(one_element)
+    }
+
+    return {
+        props: {
+            items_array_statc: result_array
+        },
+        revalidate: 60,
+    }
+}
+
