@@ -70,17 +70,11 @@ export default function Home() {
       </Head>
       <main className={`${styles.main} ${inter.className}`}>
         <div /*className={styles.description}*/>
-             <Card name="Костюмные брюки с защипами"
-                   articul = "trs0359"
-                   price = "4999руб"
-                   descripton = "descripton"
-                   img_link = "https://static.lichi.com/product/45562/d01dfa53a3149555f2561c3a30ead28c.jpg?v=0_45562.0"
-             />
 
             <UiVirtualScroll
                 buffer={buffer}
                 rowHeight={39}
-                height="50vh"
+                height="90vh"
                 limit={limit}
                 onPrevCallback={prevCallback}
                 onNextCallback={nextCallback}
@@ -88,6 +82,12 @@ export default function Home() {
                 <>
                     {items.map((item, index) => (
                         <div style={{ padding: '10px' }}>
+                            <Card name={item + "Костюмные брюки с защипами"}
+                                  articul = "trs0359"
+                                  price = "4999руб"
+                                  descripton = "descripton"
+                                  img_link = "https://static.lichi.com/product/45562/d01dfa53a3149555f2561c3a30ead28c.jpg?v=0_45562.0"
+                            />
                             {isLoading ? <>Loading...</> : item}
                         </div>
                     ))}
