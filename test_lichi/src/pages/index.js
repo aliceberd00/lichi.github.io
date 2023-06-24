@@ -3,10 +3,63 @@ import Image from 'next/image'
 import { Inter } from 'next/font/google'
 import styles from '@/styles/Home.module.css'
 import {Card} from "@/components/card/Card";
+import {useEffect, useState} from "react";
+import UiVirtualScroll from "@/components/UiVirtualScroll/UiVirtualScroll";
 
 const inter = Inter({ subsets: ['latin'] })
+const callApi = (offset, limit) => {
+    return new Promise((resolve) => {
+        const items = []
+        for (let index = offset; index < offset + limit; index++) {
+            items.push('label ' + index)
+        }
+
+        setTimeout(() => {
+            resolve(items)
+        }, 2000)
+    })
+}
+
 
 export default function Home() {
+    const limit = 100
+    // количество элементов, которые мы хотим сохранить в памяти - 300
+    const buffer = limit * 3
+    // количество элементов, которые мы хотим кэшировать при загрузке нового фрагмента данных
+    const cache = buffer - limit
+    const [items, setItems] = useState([])
+    const [isLoading, setIsLoading] = useState(false)
+
+    useEffect(() => {
+        setIsLoading(true)
+        callApi(0, buffer).then((res) => {
+            setItems(res)
+            setIsLoading(false)
+        })
+    }, [])
+
+    const prevCallback = (newOffset) => {
+        setIsLoading(true)
+
+        return callApi(newOffset, limit).then((res) => {
+            const newItems = [...res, ...items.slice(0, cache)]
+            setItems(newItems)
+            setIsLoading(false)
+            return true
+        })
+    }
+
+    const nextCallback = (newOffset) => {
+        setIsLoading(true)
+
+        return callApi(newOffset, limit).then((res) => {
+            const newItems = [...items.slice(-cache), ...res]
+            setItems(newItems)
+            setIsLoading(false)
+            return true
+        })
+    }
+
   return (
     <>
       <Head>
@@ -24,6 +77,22 @@ export default function Home() {
                    img_link = "https://static.lichi.com/product/45562/d01dfa53a3149555f2561c3a30ead28c.jpg?v=0_45562.0"
              />
 
+            <UiVirtualScroll
+                buffer={buffer}
+                rowHeight={39}
+                height="50vh"
+                limit={limit}
+                onPrevCallback={prevCallback}
+                onNextCallback={nextCallback}
+            >
+                <>
+                    {items.map((item, index) => (
+                        <div style={{ padding: '10px' }}>
+                            {isLoading ? <>Loading...</> : item}
+                        </div>
+                    ))}
+                </>
+            </UiVirtualScroll>
 
         </div>
       </main>
