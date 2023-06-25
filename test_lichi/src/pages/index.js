@@ -6,23 +6,24 @@ import {Card} from "@/components/card/Card";
 import {useEffect, useState} from "react";
 import UiVirtualScroll from "@/components/UiVirtualScroll/UiVirtualScroll";
 import {useDispatch, useSelector} from "react-redux";
-import {fetchItems} from "@/asyncActions/getItems";
+import {fetchItems, axiosFetchItems} from "@/asyncActions/getItems";
 import axios from "axios";
-
+import { useRouter } from 'next/router'
+import { Link, animateScroll as scroll } from "react-scroll";
 
 const inter = Inter({ subsets: ['latin'] })
-const callApi = (offset, limit) => {
-    return new Promise((resolve) => {
-        const items = []
-        for (let index = offset; index < offset + limit; index++) {
-            items.push('label ' + index)
-        }
-
-        setTimeout(() => {
-            resolve(items)
-        }, 2000)
-    })
-}
+// const callApi = (offset, limit) => {
+//     return new Promise((resolve) => {
+//         const items = []
+//         for (let index = offset; index < offset + limit; index++) {
+//             items.push('label ' + index)
+//         }
+//
+//         setTimeout(() => {
+//             resolve(items)
+//         }, 2000)
+//     })
+// }
 
 const CheckHeadVisibility = (items_array) => {
   //получем данные из state в массив
@@ -34,15 +35,36 @@ const CheckHeadVisibility = (items_array) => {
     return result
 }
 
+const CheckMiddleVisibility = (items_array) => {
+    //получем данные из state в массив
+    let result = false
+    for (let i=12; i<=23; i++){
+        if(items_array[i].visibility)
+            result = true
+    }
+    return result
+}
+
 const CheckTailVisibility = (items_array) => {
     //получем данные из state в массив
     let result = false
     for (let i=24; i<=35; i++){
-        console.log("otladka")
-        console.log(items_array[i])
         if(items_array[i].visibility)
             result = true
     }
+    return result
+}
+
+const getMinVisibleId = (items_array) => {
+    let result = 0
+    //let id_array = []
+    for (let i=1; i <= 35; i++){
+        if(items_array[i].visibility){
+            result = items_array[i].id
+        }
+    }
+    //Math.min.apply(null, [1,3,5,-1,8,0])
+    console.log("min visibility = "+ result)
     return result
 }
 
@@ -51,8 +73,12 @@ const getMaxPageNumber = (items_array) => {
     return (items_array[35].id + 1) / 12
 }
 
+
+
+
 export default function Home({items_array_statc}) {
     const dispatch = useDispatch()
+    const router = useRouter()
     const limit = 12
     // количество элементов, которые мы хотим сохранить в памяти - 300
     const buffer = limit * 3
@@ -60,70 +86,82 @@ export default function Home({items_array_statc}) {
     const cache = buffer - limit
     const [items, setItems] = useState([])
     const [isLoading, setIsLoading] = useState(false)
+    const [minId, setMinId] = useState(0)
     const items_array = useSelector(state => state.items_reducer.items_array)
+    const [pushLabel, setPushLabel] = useState('')
+
+    function go_to_valid(v_route){
+        setTimeout(() => {
+            router.push(v_route);
+            setIsLoading(false)
+        }, 600);
+    }
+
+
+    console.log(items_array)
+    console.log(isLoading)
+    if(items_array){
+        if(items_array.length > 0){
+            console.log(CheckMiddleVisibility(items_array))
+        }
+    }
+
 
     useEffect(() => {
         setIsLoading(true)
-        // callApi(0, buffer).then((res) => {
-        //     setItems(res)
-        //     setIsLoading(false)
-        // })
         dispatch({type: "INSERT_ITEMS", payload: items_array_statc})
         setIsLoading(false)
+        console.log('check')
     }, [])
 
+
      useEffect(() => {
-         console.log(items_array)
+         console.log('changed')
          if (items_array.length > 0){
-             if(CheckTailVisibility(items_array)){
-                 console.log('added next data to tail')
-                 // console.log(items_array)
+             // if(pushLabel != ''){
+             //     router.push(pushLabel);
+             //     setPushLabel('')
+             // }
+             //Ошибка случается, если последующий код выполняется из-за загрузки данных в массив. Нужно это исключить
+             if(CheckTailVisibility(items_array) && isLoading==false){
+                 const min_visible_id = getMinVisibleId(items_array)
+                 setIsLoading(true)
                  const max_page = getMaxPageNumber(items_array)
-                 console.log("max_page = " + max_page)
-                 dispatch(fetchItems(12,max_page+1,'ADD_TO_TAIL'))
-                 console.log('data tipa fetched')
+                 dispatch(axiosFetchItems(12,max_page+1,'ADD_TO_TAIL'))
+
+                 console.log('test1 ' + min_visible_id)
+                 setPushLabel('/#card_'+min_visible_id)
+                 go_to_valid('/#card_'+min_visible_id)
+
             }
+
+             if(CheckHeadVisibility(items_array) && isLoading==false){
+                 const min_visible_id = getMinVisibleId(items_array)
+
+                 const max_page = getMaxPageNumber(items_array)
+                 if(max_page > 3){
+                     setIsLoading(true)
+                     dispatch(axiosFetchItems(12,max_page-3,'ADD_TO_HEAD'))
+
+                     console.log('test1 ' + min_visible_id)
+                     setPushLabel('/#card_'+min_visible_id)
+                     go_to_valid('/#card_'+min_visible_id)
+                 }
+             }
+
+
+             // if(minId!=items_array[0].id){
+             //     setMinId(items_array[0].id)
+             // }
+
          }
      },[items_array]);
 
 
-    const prevCallback = (newOffset) => {
-        setIsLoading(true)
 
-        return callApi(newOffset, limit).then((res) => {
-            const newItems = [...res, ...items.slice(0, cache)]
-            setItems(newItems)
-            setIsLoading(false)
-            return true
-        })
-    }
-
-    const nextCallback = (newOffset) => {
-        setIsLoading(true)
-
-        return callApi(newOffset, limit).then((res) => {
-            const newItems = [...items.slice(-cache), ...res]
-            setItems(newItems)
-            setIsLoading(false)
-            return true
-        })
-    }
 
     let cards_strng = ''
-    // if(items_array){
-    //     cards_strng = items_array.map((item, index) => (
-    //         <div>
-    //             <Card name={item.name}
-    //                   article={item.article}
-    //                   price={item.price}
-    //                   description={item.description}
-    //                   img_link={item.img_link}
-    //                   key={item.id}
-    //             />
-    //             {isLoading ? <>Loading...</> : item}
-    //         </div>
-    //     ))
-    // }
+
 
 
   return (
@@ -139,23 +177,17 @@ export default function Home({items_array_statc}) {
             <button onClick={() => dispatch(fetchItems(30,1,'INSERT_ITEMS'))}>
                 press me</button>
 
-            <UiVirtualScroll
-                buffer={buffer}
-                rowHeight={39}
-                height="90vh"
-                limit={limit}
-                onPrevCallback={prevCallback}
-                onNextCallback={nextCallback}
-            >
                 <div className={styles.cards}>
                     {items_array.map(item =>
                         <div>
-                            <Card id={item.id}
+                            <Card
+                                  element_id ={item.id}
                                   name={item.name}
                                   article={item.article}
                                   price={item.price}
                                   description={item.description}
                                   img_link={item.img_link}
+                                  isLoading={isLoading}
                                   key={item.id}
                             />
                             {/*{isLoading ? <>Loading...</> : item.id}*/}
@@ -163,7 +195,6 @@ export default function Home({items_array_statc}) {
                     )}
                     {cards_strng}
                 </div>
-            </UiVirtualScroll>
 
         </div>
       </main>
