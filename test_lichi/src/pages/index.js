@@ -24,6 +24,32 @@ const callApi = (offset, limit) => {
     })
 }
 
+const CheckHeadVisibility = (items_array) => {
+  //получем данные из state в массив
+    let result = false
+    for (let i=0; i<=11; i++){
+       if(items_array[i].visibility)
+           result = true
+    }
+    return result
+}
+
+const CheckTailVisibility = (items_array) => {
+    //получем данные из state в массив
+    let result = false
+    for (let i=24; i<=35; i++){
+        console.log("otladka")
+        console.log(items_array[i])
+        if(items_array[i].visibility)
+            result = true
+    }
+    return result
+}
+
+const getMaxPageNumber = (items_array) => {
+    //на первом шаге получаем массив из state
+    return (items_array[35].id + 1) / 12
+}
 
 export default function Home({items_array_statc}) {
     const dispatch = useDispatch()
@@ -35,8 +61,6 @@ export default function Home({items_array_statc}) {
     const [items, setItems] = useState([])
     const [isLoading, setIsLoading] = useState(false)
     const items_array = useSelector(state => state.items_reducer.items_array)
-    console.log('test')
-    console.log(items_array)
 
     useEffect(() => {
         setIsLoading(true)
@@ -50,7 +74,17 @@ export default function Home({items_array_statc}) {
 
      useEffect(() => {
          console.log(items_array)
-     },[dispatch]);
+         if (items_array.length > 0){
+             if(CheckTailVisibility(items_array)){
+                 console.log('added next data to tail')
+                 // console.log(items_array)
+                 const max_page = getMaxPageNumber(items_array)
+                 console.log("max_page = " + max_page)
+                 dispatch(fetchItems(12,max_page+1,'ADD_TO_TAIL'))
+                 console.log('data tipa fetched')
+            }
+         }
+     },[items_array]);
 
 
     const prevCallback = (newOffset) => {

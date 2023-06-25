@@ -13,7 +13,7 @@ export function Card({id,name, article, price, description, img_link}) {
 
     useEffect(() => {
         dispatch({type: "UPDATE_ITEM_VISIBILITY", payload: {id: id, visibility:inView}})
-
+        console.log('update visible '+id + inView)
     }, [inView])
 
     return (

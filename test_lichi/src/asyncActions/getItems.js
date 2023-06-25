@@ -15,7 +15,7 @@ export const fetchItems = (limit, page, type) => {
                 let result_array = []
                 for (let i=0; i<data_array.length; i++){
                     const one_element = {
-                        id: i + (page-1)*30,
+                        id: i + (page-1)*12,
                         visibility: false,
                         name: data_array[i].name,
                         article: data_array[i].article,
@@ -25,7 +25,7 @@ export const fetchItems = (limit, page, type) => {
                     }
                     result_array.push(one_element)
                 }
-                dispatch({type: "INSERT_ITEMS", payload: result_array})
+                dispatch({type: type, payload: result_array})
             })
             // .then(json => console.log(json))
             // .then(json => dispatch(({type: "ADD_MANY_DAYS", json})))
