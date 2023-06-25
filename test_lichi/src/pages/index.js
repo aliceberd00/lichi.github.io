@@ -48,9 +48,9 @@ export default function Home({items_array_statc}) {
         setIsLoading(false)
     }, [])
 
-    // useEffect(() => {
-    //     setItems(items_array)
-    // },[dispatch]);
+     useEffect(() => {
+         console.log(items_array)
+     },[dispatch]);
 
 
     const prevCallback = (newOffset) => {
@@ -116,14 +116,15 @@ export default function Home({items_array_statc}) {
                 <div className={styles.cards}>
                     {items_array.map(item =>
                         <div>
-                            <Card name={item.name}
+                            <Card id={item.id}
+                                  name={item.name}
                                   article={item.article}
                                   price={item.price}
                                   description={item.description}
                                   img_link={item.img_link}
                                   key={item.id}
                             />
-                            {isLoading ? <>Loading...</> : item.id}
+                            {/*{isLoading ? <>Loading...</> : item.id}*/}
                         </div>
                     )}
                     {cards_strng}

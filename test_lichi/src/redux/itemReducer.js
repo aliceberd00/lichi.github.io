@@ -13,7 +13,7 @@ export const itemReducer = (state = defaultState, action) => {
         case "UPDATE_ITEM_VISIBILITY": {
             return {
                 ...state, items_array: [...state.items_array.map(function (element) {
-                        if (element.id == acton.payload.id) {
+                        if (element.id == action.payload.id) {
                             let result_element = element
                             result_element.visibility = action.payload.visibility
                             return result_element
