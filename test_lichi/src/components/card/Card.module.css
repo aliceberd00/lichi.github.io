@@ -8,5 +8,15 @@
   font-weight: 700;
   text-align: center;
 }
+.card p {
+  color: #4F4F4F;
+}
+
+.description p {
+  color: #000;
+}
+.description ul {
+  list-style-type: none;
+}
 
 /*# sourceMappingURL=Card.module.css.map */

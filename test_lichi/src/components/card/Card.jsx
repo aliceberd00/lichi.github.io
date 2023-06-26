@@ -20,11 +20,11 @@ export function Card({element_id ,name, article, price, description, img_link, i
     return (
      <div className={card.card} id={"card_"+element_id}>
         <Image ref={ref} src={img_link} width={3} height={3} layout="responsive"/>
-         <h1>{element_id}</h1>
+         {/* <h1>{element_id}</h1>*/}
             <h1 >{name}</h1>
             <h2>{price}</h2>
-            <p>{article}</p>
-         <div dangerouslySetInnerHTML={{ __html: description }} />
+            <p> акртикул: {article}</p>
+         <div className={card.description} dangerouslySetInnerHTML={{ __html: description }} />
          {/*{description}*/}
      </div>
     )
