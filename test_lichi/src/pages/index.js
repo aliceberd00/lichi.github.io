@@ -1,30 +1,16 @@
 import Head from 'next/head'
-import Image from 'next/image'
 import { Inter } from 'next/font/google'
 import styles from '@/styles/Home.module.css'
 import {Card} from "@/components/card/Card";
-import {useEffect, useState} from "react";
-import UiVirtualScroll from "@/components/UiVirtualScroll/UiVirtualScroll";
+import {useEffect, useState, useRef} from "react";
 import {useDispatch, useSelector} from "react-redux";
 import {fetchItems, axiosFetchItems} from "@/asyncActions/getItems";
 import axios from "axios";
-import { useRouter } from 'next/router'
-import { Link, animateScroll as scroll } from "react-scroll";
 
 const inter = Inter({ subsets: ['latin'] })
-// const callApi = (offset, limit) => {
-//     return new Promise((resolve) => {
-//         const items = []
-//         for (let index = offset; index < offset + limit; index++) {
-//             items.push('label ' + index)
-//         }
-//
-//         setTimeout(() => {
-//             resolve(items)
-//         }, 2000)
-//     })
-// }
 
+
+//Нам нужны функции для проверки - сейчас происходит просмотр первой (Head), второй (Middle) или последней (Tail) части списка
 const CheckHeadVisibility = (items_array) => {
   //получем данные из state в массив
     let result = false
@@ -55,22 +41,21 @@ const CheckTailVisibility = (items_array) => {
     return result
 }
 
+///Этой функцией будем определять, куда возвращать фокус при загрузке новых данных
 const getMinVisibleId = (items_array) => {
     let result = 0
-    //let id_array = []
     for (let i=1; i <= 35; i++){
         if(items_array[i].visibility){
-            result = items_array[i].id
+            result = items_array[i].element_id
         }
     }
-    //Math.min.apply(null, [1,3,5,-1,8,0])
-    console.log("min visibility = "+ result)
     return result
 }
 
+//Нам нужна функция, которая будет возвращать номер максимальной страницы, которая сейчас загружена в state
 const getMaxPageNumber = (items_array) => {
     //на первом шаге получаем массив из state
-    return (items_array[35].id + 1) / 12
+    return (items_array[35].element_id + 1) / 12
 }
 
 
@@ -78,124 +63,94 @@ const getMaxPageNumber = (items_array) => {
 
 export default function Home({items_array_statc}) {
     const dispatch = useDispatch()
-    const router = useRouter()
-    const limit = 12
-    // количество элементов, которые мы хотим сохранить в памяти - 300
-    const buffer = limit * 3
-    // количество элементов, которые мы хотим кэшировать при загрузке нового фрагмента данных
-    const cache = buffer - limit
-    const [items, setItems] = useState([])
     const [isLoading, setIsLoading] = useState(false)
-    const [minId, setMinId] = useState(0)
     const items_array = useSelector(state => state.items_reducer.items_array)
-    const [pushLabel, setPushLabel] = useState('')
 
+    //Функция ждёт примерно пол секунды пока перерендерится страница,
+    //после чего скроллит к последнему просмотренному элементу
     function go_to_valid(v_route){
         setTimeout(() => {
-            router.push(v_route);
+            // router.push(v_route);
+            document.getElementById(v_route).scrollIntoView();   //.focus();
             setIsLoading(false)
+
         }, 600);
     }
 
-
-    console.log(items_array)
-    console.log(isLoading)
-    if(items_array){
-        if(items_array.length > 0){
-            console.log(CheckMiddleVisibility(items_array))
-        }
-    }
-
-
+    //Вставляем данные в state при первой загрузке окна
     useEffect(() => {
         setIsLoading(true)
         dispatch({type: "INSERT_ITEMS", payload: items_array_statc})
         setIsLoading(false)
-        console.log('check')
     }, [])
 
 
+    //Выполняется, когда обновляем данные в state - или когда изменяем видимость карточек, или когда подгружаем данные
      useEffect(() => {
-         console.log('changed')
          if (items_array.length > 0){
-             // if(pushLabel != ''){
-             //     router.push(pushLabel);
-             //     setPushLabel('')
-             // }
              //Ошибка случается, если последующий код выполняется из-за загрузки данных в массив. Нужно это исключить
+             //Для этого использую isLoading: пока загрузка не закончилась и не произошёл скролл к нужному месту - не грузим новые данные
              if(CheckTailVisibility(items_array) && isLoading==false){
-                 const min_visible_id = getMinVisibleId(items_array)
                  setIsLoading(true)
+                 const min_visible_id = getMinVisibleId(items_array)
                  const max_page = getMaxPageNumber(items_array)
-                 dispatch(axiosFetchItems(12,max_page+1,'ADD_TO_TAIL'))
-
-                 console.log('test1 ' + min_visible_id)
-                 setPushLabel('/#card_'+min_visible_id)
-                 go_to_valid('/#card_'+min_visible_id)
-
+                 //загружаем данные в state
+                 try {
+                    dispatch(axiosFetchItems(12,max_page+1,'ADD_TO_TAIL'))
+                    //скроллим к месту, где были до этого - и разблокируем дальнейшую загрузку
+                    go_to_valid('card_'+min_visible_id)
+                 } catch (exceptionVar) {
+                     console.log("При загрузке данных произошла ошибка")
+                     setIsLoading(false)
+                 }
             }
 
+             //То же самое, но когда прокрутка вверх
              if(CheckHeadVisibility(items_array) && isLoading==false){
                  const min_visible_id = getMinVisibleId(items_array)
-
                  const max_page = getMaxPageNumber(items_array)
                  if(max_page > 3){
                      setIsLoading(true)
-                     dispatch(axiosFetchItems(12,max_page-3,'ADD_TO_HEAD'))
-
-                     console.log('test1 ' + min_visible_id)
-                     setPushLabel('/#card_'+min_visible_id)
-                     go_to_valid('/#card_'+min_visible_id)
+                     try {
+                         dispatch(axiosFetchItems(12, max_page - 3, 'ADD_TO_HEAD'))
+                         go_to_valid('card_' + min_visible_id)
+                     } catch (exceptionVar) {
+                         console.log("При загрузке данных произошла ошибка")
+                         setIsLoading(false)
+                     }
                  }
              }
-
-
-             // if(minId!=items_array[0].id){
-             //     setMinId(items_array[0].id)
-             // }
-
          }
      },[items_array]);
-
-
-
-
-    let cards_strng = ''
-
 
 
   return (
     <>
       <Head>
-        <title>Create Next App</title>
+        <title>Тестовое для lichi</title>
         <meta name="description" content="Generated by create next app" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className={`${styles.main} ${inter.className}`}>
         <div /*className={styles.description}*/>
-            <button onClick={() => dispatch(fetchItems(30,1,'INSERT_ITEMS'))}>
-                press me</button>
-
                 <div className={styles.cards}>
                     {items_array.map(item =>
                         <div>
+                        {/*<p>{item.element_id}</p>*/}
                             <Card
-                                  element_id ={item.id}
+                                  element_id ={item.element_id}
                                   name={item.name}
                                   article={item.article}
                                   price={item.price}
                                   description={item.description}
                                   img_link={item.img_link}
                                   isLoading={isLoading}
-                                  key={item.id}
+                                  key={item.element_id}
                             />
-                            {/*{isLoading ? <>Loading...</> : item.id}*/}
                         </div>
                     )}
-                    {cards_strng}
                 </div>
-
         </div>
       </main>
     </>
@@ -211,13 +166,13 @@ export const getStaticProps = async () => {
         limit: 36,
         page: 1
     }))
-    // console.log(response.data)
     const data = response.data
     const data_array = data.api_data.aProduct
     let result_array = []
     for (let i=0; i<data_array.length; i++){
         const one_element = {
-            id: i ,
+            // id: i ,
+            element_id: i,
             visibility: false,
             name: data_array[i].name,
             article: data_array[i].article,

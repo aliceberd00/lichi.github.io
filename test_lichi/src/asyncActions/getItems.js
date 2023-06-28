@@ -15,13 +15,13 @@ export const axiosFetchItems = (limit, page, type) => {
         let result_array = []
         for (let i=0; i<data_array.length; i++){
             const one_element = {
-                id: i + (page-1)*12 ,
+                element_id: i + (page-1)*12,
                 visibility: false,
                 name: data_array[i].name,
                 article: data_array[i].article,
                 price: data_array[i].original_price + data_array[i].currency.postfix,
                 description: data_array[i].descriptions.html,
-                img_link: data_array[i].photos[0].big
+                img_link: data_array[i].photos[1].big
             }
             result_array.push(one_element)
         }
@@ -49,7 +49,7 @@ export const fetchItems = (limit, page, type) => {
                 let result_array = []
                 for (let i=0; i<data_array.length; i++){
                     const one_element = {
-                        id: i + (page-1)*12,
+                        element_id: i + (page-1)*12,
                         visibility: false,
                         name: data_array[i].name,
                         article: data_array[i].article,
@@ -61,7 +61,5 @@ export const fetchItems = (limit, page, type) => {
                 }
                 dispatch({type: type, payload: result_array})
             })
-            // .then(json => console.log(json))
-            // .then(json => dispatch(({type: "ADD_MANY_DAYS", json})))
     }
 }
