@@ -1,19 +1,21 @@
 .card{
+  padding-top: 5%;
 
   h1{
     font-size: 16px;
     font-weight: 600;
-    text-align: center;
+   // text-align: center;
   }
   h2{
     font-size: 18px;
     font-weight: 700;
-    text-align: center;
+   // text-align: center;
   }
 
   p{
     //text-align: center;
     color: #4F4F4F;
+    width: 80%;
   }
 
 }

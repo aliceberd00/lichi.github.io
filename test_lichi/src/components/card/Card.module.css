@@ -1,15 +1,17 @@
+.card {
+  padding-top: 5%;
+}
 .card h1 {
   font-size: 16px;
   font-weight: 600;
-  text-align: center;
 }
 .card h2 {
   font-size: 18px;
   font-weight: 700;
-  text-align: center;
 }
 .card p {
   color: #4F4F4F;
+  width: 80%;
 }
 
 .description p {
