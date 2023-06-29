@@ -1,4 +1,5 @@
 .card {
+  width: 100%;
   padding-top: 5%;
 }
 .card h1 {
@@ -9,9 +10,13 @@
   font-size: 18px;
   font-weight: 700;
 }
+.card img {
+  padding-top: 2%;
+}
 .card p {
+  padding-top: 2%;
   color: #4F4F4F;
-  width: 80%;
+  width: 40%;
 }
 
 .description p {

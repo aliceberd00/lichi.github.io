@@ -16,13 +16,13 @@ export function Card({element_id ,name, article, price, description, img_link}) 
     }, [inView])
 
     return (
-     <div className={card.card} id={"card_"+element_id}>
-        <h1 >{name}</h1>
-        <h2>{price}</h2>
-        <Image ref={ref} src={img_link} width={384} height={512} alt={""}/>
-        <p> акртикул: {article}</p>
-        <div className={card.description} dangerouslySetInnerHTML={{ __html: description }} />
+         <div className={card.card} id={"card_"+element_id}>
+            <Image ref={ref} src={img_link} width={384} height={512} alt={""}/>
+             <h1 >{name}</h1>
+             <h2>{price}</h2>
+            <p> акртикул: {article}</p>
+            <div className={card.description} dangerouslySetInnerHTML={{ __html: description }}/>
 
-     </div>
+         </div>
     )
 }
